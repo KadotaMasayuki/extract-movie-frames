@@ -1,20 +1,22 @@
 #!/bin/bash
 
 # 使用方法：
-#   extract_frames.sh <動画ファイル1> <動画ファイル2> ..↲
-#   extract_frames.sh -c <分割数> <動画ファイル1> <動画ファイル2> ..↲
-#   extract_frames.sh -t <分割間隔秒> <動画ファイル1> <動画ファイル2> ..↲
+#   extract_frames.sh <動画ファイル1> [ <動画ファイル2> .. ]
+#   extract_frames.sh -c <分割数> <動画ファイル1> [ <動画ファイル2> .. ]
+#   extract_frames.sh -t <分割間隔秒> <動画ファイル1> [ <動画ファイル2> .. ]
+
 
 # 分割数等を指定しないときの、最低分割数
 DEFAULT_MIN_CNT=60
 # 分割数等を指定しないときの、分割間隔秒
 DEFAULT_DURATION_SEC=120
 
+
 if [ "$#" -lt 1 ]; then
 	echo "Usage:"
-	echo "   $0 <video_file> <video_file> ..."
-	echo "   $0 -c <split_count> <video_file> <video_file> ..."
-	echo "   $0 -t <split_duration_sec> <video_file> <video_file> ..."
+	echo "   $0 <video_file> [ <video_file> ... ]"
+	echo "   $0 -c <split_count> <video_file> [ <video_file> ... ]"
+	echo "   $0 -t <split_duration_sec> <video_file> [ <video_file> ... ]"
 	exit 1
 fi
 
@@ -24,36 +26,36 @@ if [ "$1" == "-c" ]; then
 	# -c 分割数
 	if [ "$#" -lt 3 ]; then
 		echo "Usage:"
-		echo "   $0 -c <split_count> <video_file> <video_file> ..."
+		echo "   $0 -c <split_count> <video_file> [ <video_file> ... ]"
 		exit 1
 	fi
 	# 半角数値のみ（整数のみ）
 	if [[ ! "$2" =~ ^[0-9]+$ ]]; then
 		echo "Usage:"
-		echo "   $0 -c <split_count> <video_file> <video_file> ..."
+		echo "   $0 -c <split_count> <video_file> [ <video_file> ... ]"
 		echo "         --> split_count accept only integer"
 		exit 1
 	fi
 	SPLIT_CNT="$2"
-	# 分割数オプションのぶんを捨てる
+	# 引数２つぶんを捨てる
 	shift
 	shift
 elif [ "$1" == "-t" ]; then
 	# -t 分割間隔秒
 	if [ "$#" -lt 3 ]; then
 		echo "Usage:"
-		echo "   $0 -t <split_duration_sec> <video_file> <video_file> ..."
+		echo "   $0 -t <split_duration_sec> <video_file> [ <video_file> ... ]"
 		exit 1
 	fi
 	# 半角数値のみ（整数のみ）
 	if [[ ! "$2" =~ ^[0-9]+$ ]]; then
 		echo "Usage:"
-		echo "   $0 -c <split_duration_sec> <video_file> <video_file> ..."
+		echo "   $0 -c <split_duration_sec> <video_file> [ <video_file> ... ]"
 		echo "         --> split_duration_sec accept only integer"
 		exit 1
 	fi
 	SPLIT_DURATION="$2"
-	# 分割間隔秒オプションのぶんを捨てる
+	# 引数２つぶんを捨てる
 	shift
 	shift
 fi
@@ -74,8 +76,10 @@ for I; do
 		if [ $DURATION_INT -gt 0 ]; then
 			# 動画であれば実施
 
+			# 分割数と分割間隔をコピー
 			SPLIT_CNT_=$SPLIT_CNT
 			SPLIT_DURATION_=$SPLIT_DURATION
+			# 出力ディレクトリを作成
 			FILENAME=$(basename -- "$INPUT_FILE")
 			FILENAME_NO_EXT="${FILENAME%.*}"
 			OUTPUT_DIR="frames_$FILENAME_NO_EXT"
@@ -94,7 +98,7 @@ for I; do
 				if [ $DURATION_INT -lt $DEFAULT_MIN_CNT ]; then
 					SPLIT_CNT_=$DURATION_INT
 				else
-					SPLIT_CNT_=$DURATION_INT / $DEFAULT_DURATION_SEC
+					SPLIT_CNT_=$(( $DURATION_INT / $DEFAULT_DURATION_SEC ))
 					if [ $SPLIT_CNT_ -lt $DEFAULT_MIN_CNT ]; then
 						SPLIT_CNT_=$DEFAULT_MIN_CNT
 					fi
